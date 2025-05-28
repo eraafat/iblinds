@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+
+    <template id="report_invoice_expense_inherits"
+              inherit_id="account.report_invoice_document">
+        <xpath expr="//th[@name='th_description']" position="before">
+            <th name="th_count" class="text-right">
+                <span>Count</span>
+            </th>
+            <th name="th_count" class="text-right">
+                <span>Width</span>
+            </th>
+            <th name="th_count" class="text-right">
+                <span>Height</span>
+            </th>
+        </xpath>
+        <xpath expr="//td[@name='account_invoice_line_name']" position="after">
+            <td name="account_invoice_line_name">
+                <span t-field="line.count"/>
+            </td>
+            <td name="account_invoice_line_name">
+                <span t-field="line.width"/>
+            </td>
+            <td name="account_invoice_line_name">
+                <span t-field="line.height"/>
+            </td>
+        </xpath>
+    </template>
+    /
+
+</odoo>

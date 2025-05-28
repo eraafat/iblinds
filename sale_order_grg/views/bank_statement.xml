@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record model="ir.ui.view" id="view_bank_statement_expense_width_height_inherit">
+        <field name="name">view.invoice.view_bank_statement_form.invoice</field>
+        <field name="model">account.bank.statement</field>
+        <field name="inherit_id" ref="account.view_bank_statement_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page/field[@name='line_ids']/list/field[@name='date']" position="after">
+            <field name="ref_line"/>
+            </xpath>
+            <xpath expr="//page/field[@name='line_ids']/list/field[@name='partner_id']" position="after">
+                <field name="account_id"/>
+                <field name="analytic_account_id"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

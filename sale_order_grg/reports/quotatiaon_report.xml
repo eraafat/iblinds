@@ -1,0 +1,16 @@
+<odoo>
+
+
+     <!-- Inherit from existing report template -->
+    <template id="report_saleorder_document_inherit" inherit_id="sale.report_saleorder_document">
+      <!-- Add the second company logo -->
+      <xpath expr="//div[@class='header']/table/tbody/tr/td[1]" position="after">
+        <td style="text-align: right;">
+          <img class="logo" t-if="doc.company_id.logo" t-att-src="image_data_uri(doc.company_id.logo)" width="200"/>
+          <img class="second-logo" t-att-src="image_data_uri('sale_order_grg.static/img/secondlogo.png')" width="200"/>
+        </td>
+      </xpath>
+    </template>
+
+
+</odoo>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+
+    <record id="view_stock_width_height_tree" model="ir.ui.view">
+        <field name="name">stock.width.height.tree</field>
+        <field name="model">stock.width.height</field>
+        <field name="arch" type="xml">
+            <list >
+                <field name="product_id"/>
+                <field name="count"/>
+                <field name="width"/>
+                <field name="height"/>
+            </list>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="stock_width_height_search">
+        <field name="name">stock.width.height.search</field>
+        <field name="model">stock.width.height</field>
+        <field name="arch" type="xml">
+            <search string="Stock Total Count Search">
+                <field name="product_id"/>
+                <filter string="Product" name="product_id" context="{'group_by': 'product_id'}" domain="[]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_stock_width_height_form" model="ir.ui.view">
+        <field name="name">stock.width.height.form</field>
+        <field name="model">stock.width.height</field>
+        <field name="arch" type="xml">
+            <form string="Stock Total Count">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="product_id" string="Product"/>
+                        <h1>
+                            <field name="product_id" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="width"/>
+                            <field name="height"/>
+                        </group>
+                        <group>
+                            <field name="count"/>
+                        </group>
+
+                    </group>
+                    <notebook>
+                        <!--Empty notebook to inherit pages from other related modules-->
+                        <page string="To Productions">
+                            <field name="stock_wh_line_ids">
+                                <list>
+                                    <field name="product_id" readonly="1"/>
+                                    <field name="count" readonly="1"/>
+                                    <field name="width" readonly="1"/>
+                                    <field name="height" readonly="1"/>
+                                    <field name="quant_type" readonly="1"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_stock_width_height_form" model="ir.actions.act_window">
+        <field name="name">Stock Total Count</field>
+        <field name="res_model">stock.width.height</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">tree,form,pivot</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to add a Manufacturing Request.
+            </p>
+        </field>
+    </record>
+
+
+
+    <menuitem
+            id="menu_stock_request_actions"
+            name="Stock Total"
+            parent="stock.menu_warehouse_report"
+            action="action_stock_width_height_form"
+            sequence="1" />
+
+</odoo>

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="res_partner_phone_request_view_phone" model="ir.ui.view">
+        <field name="name">phone.res.partner.form</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='phone']" position="attributes">
+                <attribute name="required">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='category_id']" position="before">
+                <field name="customer_source_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="res_partner_category_view_buttons" model="ir.ui.view">
+        <field name="name">view.res.partner.form</field>
+        <field name="model">res.partner.category</field>
+        <field name="inherit_id" ref="base.view_partner_category_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='active']" position="after">
+                <field name="normal_partner"/>
+                <field name="min_quantity"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="sale_order_mrp_request_view_buttons" model="ir.ui.view">
+        <field name="name">view.order.form.inherit.width,height</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button class="oe_stat_button" type="object" name="view_mrp_request_action" icon="fa-building">
+                    <field invisible="1" string="Request" name="mrp_sent" widget="statinfo"/>
+                    <field invisible="1" string="po Line" name="manufacture_to_other" widget="statinfo"/>
+                    Request
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_quotationsale_tree_with_onboarding_employee" model="ir.ui.view">
+        <field name="name">view.order.form.inherit.tree.height</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_quotation_tree_with_onboarding"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='state']" position="after">
+                <field name="employee_id"/>
+                <field name="customer_source_id"/>
+            </xpath>
+            <xpath expr="//field[@name='amount_total']" position="before">
+                <field name="total_counts" sum="Total count"/>
+                <field name="total_quantity" sum="Total_quantity"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_quotationsale_tree_with_employee" model="ir.ui.view">
+        <field name="name">view.order.form.inherit.tree.height</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='amount_total']" position="after">
+                <field name="employee_id"/>
+                <field name="customer_source_id"/>
+                <field name="total_counts" sum="Total count"/>
+                <field name="total_quantity" sum="Total_quantity"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="sale_search_width_height_inherit">
+        <field name="name">view.order.form.inherit.search</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="partner_category_id" string="Tag"/>
+            </xpath>
+            <xpath expr="//filter[@name='order_month']" position="after">
+                <field name="partner_category_id" string="Tag"/>
+                <filter string="Category" name="category" domain="[]" context="{'group_by': 'partner_category_id'}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="sale_move_width_height_inherit">
+        <field name="name">view.order.form.inherit.width.height</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_confirm']" position="after">
+                <button type="object"
+                        name="send_to_manufacturing"
+                        string="Manufacturing Request"
+                        class="btn btn-success"
+                        invisible="mrp_sent == True or state not in ('sale', 'done')"/>
+                <field name="purchase_sent" invisible="False"/>
+                <button type="object"
+                        name="create_purchase_order"
+                        string="Create Purchase Order"
+                        class="btn btn-success"
+                        invisible="state not in ('sale', 'done') or manufacture_to_other != True or purchase_sent == True"/>
+            </xpath>
+
+            <xpath expr="//page/field[@name='order_line']/list/field[@name='product_id']" position="before">
+                <field name="note"/>
+            </xpath>
+            <xpath expr="//page/field[@name='order_line']/list/field[@name='name']" position="after">
+                <field name="color_id"
+                       options="{'no_open':True,'no_create':True,'no_create_edit':True,'no_quick_create':True}"/>
+                <field name="count"/>
+                <field name="width"/>
+                <field name="height"/>
+            </xpath>
+            <xpath expr="//page/field[@name='order_line']" position="before">
+                <group>
+                    <group>
+                        <field name="product_id"/>
+                        <field name="color_id"
+                               options="{'no_open':True,'no_create':True,'no_create_edit':True,'no_quick_create':True}"/>
+                    </group>
+                    <group>
+                        <field name="unit_price"/>
+                        <field name="discount_for_lines"/>
+                        <button name="apply_discount_for_lines" string="Apply Discount" class="btn btn-success" type="object"/>
+                    </group>
+                </group>
+            </xpath>
+            <xpath expr="//field[@name='order_line']" position="attributes">
+                <attribute name="context">{'default_product_id': product_id,'default_price_unit':
+                    unit_price,'default_color_id':color_id,'default_discount':discount_for_lines}
+                </attribute>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="partner_category_id"/>
+                <field name="employee_id"/>
+                <field name="customer_source_id"/>
+            </xpath>
+            <xpath expr="//field[@name='validity_date']" position="after">
+                <field name="delivery_date_from"/>
+                <field name="delivery_date_to"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_stock_product_template_is_fabric" model="ir.ui.view">
+        <field name="name">product.template.stock.tree.inherit</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='invoice_policy']" position="before">
+                <field name="is_fabric" invisible="0"/>
+                <field name="manufacture_to_other" invisible="0"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

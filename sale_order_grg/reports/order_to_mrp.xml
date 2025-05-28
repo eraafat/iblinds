@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="sale.action_report_saleorder" model="ir.actions.report">
+            <field name="name">Quotation / Order</field>
+            <field name="model">sale.order</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">sale.report_saleorder</field>
+            <field name="report_file">sale.report_saleorder</field>
+            <field name="print_report_name">(object.state in ('draft', 'sent') and 'Quotation  - %s - %s' % ( object.name ,object.partner_id.name ,)) or 'Order - %s - %s' % (object.name,object.partner_id.name )</field>
+            <field name="binding_model_id" ref="model_sale_order"/>
+            <field name="binding_type">report</field>
+        </record>
+
+        <template id="report_invoice_expense_inherits"
+                  inherit_id="account.report_invoice_document">
+<!--            <xpath expr="//th[@name='th_description']" position="before">-->
+<!--                <th name="th_note" class="text-center">-->
+<!--                    <span>Note</span>-->
+<!--                </th>-->
+<!--            </xpath>-->
+            <xpath expr="//th[@name='th_description']" position="after">
+                <th name="th_color" class="text-right">
+                    <span>Color</span>
+                </th>
+                <th name="th_count" class="text-right">
+                    <span>Count</span>
+                </th>
+                <th name="th_count" class="text-right">
+                    <span>Width</span>
+                </th>
+                <th name="th_count" class="text-right">
+                    <span>Height</span>
+                </th>
+            </xpath>
+<!--            <xpath expr="//td[@name='account_invoice_line_name']" position="before">-->
+<!--                <td name="account_invoice_line_note">-->
+<!--                    <span t-field="line.note"/>-->
+<!--                </td>-->
+<!--            </xpath>-->
+            <xpath expr="//td[@name='account_invoice_line_name']" position="after">
+                <td name="account_invoice_line_color">
+                    <span t-field="line.color_id.display_name"/>
+                </td>
+                <td name="account_invoice_line_count">
+                    <span t-field="line.count"/>
+                </td>
+                <td name="account_invoice_line_width">
+                    <span t-field="line.width"/>
+                </td>
+                <td name="account_invoice_line_height">
+                    <span t-field="line.height"/>
+                </td>
+            </xpath>
+            <xpath expr="//div[@name='origin']" position="after">
+
+                <div class="col-auto col-3 mw-100 mb-2" t-if="o.total_counts" name="total_counts">
+                    <strong>Total Count:</strong>
+                    <p class="m-0" t-field="o.total_counts"/>
+                </div>
+                <div class="col-auto col-3 mw-100 mb-2" t-if="o.total_quantity" name="total_quantity">
+                    <strong>Total Quantity:</strong>
+                    <p class="m-0" t-field="o.total_quantity"/>
+                </div>
+                <br/>
+                <!--                <table class="table table-sm o_main_table" name="payment_details_table"-->
+                <!--                       style=" font-family:Verdana, Arial,sans-serif; width: 100%; border-collapse:separate;">-->
+                <!--                    <thead>-->
+                <!--                        <tr>-->
+                <!--                            <th name="th_sl_no" class="text-center">-->
+                <!--                                <span>Total Count</span>-->
+                <!--                            </th>-->
+                <!--                        </tr>-->
+                <!--                        <tr>-->
+                <!--                            <th name="th_sl_no" class="text-center">-->
+                <!--                                <span>Total Quantity</span>-->
+                <!--                            </th>-->
+                <!--                        </tr>-->
+                <!--                    </thead>-->
+                <!--                </table>-->
+            </xpath>
+        </template>
+
+        <record id="operation_order_report" model="ir.actions.report">
+            <field name="name">Operation Order</field>
+            <field name="model">sale.order</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">sale_order_grg.daily_order_quantity_head</field>
+            <field name="report_file">sale_order_grg.daily_order_quantity_head</field>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="binding_type">report</field>
+            <field name="print_report_name">('Order-' + object.name + '.pdf')</field>
+        </record>
+
+        <template id="daily_order_quantity_head">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="doc">
+                    <t t-call="web.external_layout">
+
+                        <div class="page" style="direction:rtl">
+
+                            <div align="right" dir="rtl">
+                                <h3 class="text-center">
+                                    <br>أمر شغل رقم :</br>
+                                    <span t-field="doc.name"/>
+                                </h3>
+                                <h3>
+                                    العميل :
+                                    <span t-field="doc.partner_id.name"/>
+                                </h3>
+                            </div>
+
+                            <br/>
+                            <br/>
+                            <table class="table table-bordered table-sm">
+
+                                <tr>
+                                    <th class="text-center bg-light" style="border 1px solid">معاينة</th>
+                                    <td class="text-center bg-light" style="border 1px solid">
+                                        <t t-esc="doc.employee_id.name"/>
+                                    </td>
+                                    <th class="text-center bg-light" style="border 1px solid">تاريخ التسليم</th>
+                                    <td class="text-center bg-light" style="border 1px solid">
+                                        <t t-esc="doc.delivery_date_from"/>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <table class="table table-bordered" style="direction:rtl">
+                                <tbody>
+                                    <tr class="text-center bg-secondary">
+                                        <td>ملحوظة</td>
+                                        <td>ستارة.</td>
+                                        <td>كود اللون</td>
+                                        <td>العدد</td>
+                                        <td>العرض</td>
+                                        <td>الطول</td>
+                                    </tr>
+                                    <t t-foreach="doc.order_line" t-as="line">
+
+                                        <tr t-att-class="'bg-200 font-weight-bold o_line_section' if line.display_type == 'line_section' else 'font-italic o_line_note' if line.display_type == 'line_note' else ''">
+                                            <t t-if="not line.display_type">
+                                                <tr class="text-center bg-light">
+                                                    <td>
+                                                        <t t-esc="line.note"/>
+                                                    </td>
+                                                    <td>
+                                                        <t t-esc="line.product_id.name"/>
+                                                    </td>
+                                                    <td style="direction:ltr">
+                                                        <t t-esc="line.color_id.display_name"/>
+                                                    </td>
+                                                    <td>
+                                                        <t t-esc="line.count"/>
+                                                    </td>
+                                                    <td>
+                                                        <t t-esc="line.width"/>
+                                                    </td>
+                                                    <td>
+                                                        <t t-esc="line.height"/>
+                                                    </td>
+
+                                                </tr>
+                                            </t>
+                                            <t t-if="line.display_type == 'line_section'">
+                                                <td name="td_section_line" colspan="99">
+                                                    <span t-field="line.name"/>
+                                                </td>
+                                                <t t-set="current_section" t-value="line"/>
+                                                <t t-set="current_subtotal" t-value="0"/>
+                                            </t>
+                                            <t t-if="line.display_type == 'line_note'">
+                                                <td name="td_note_line" colspan="99">
+                                                    <span t-field="line.name"/>
+                                                </td>
+                                            </t>
+                                        </tr>
+
+                                    </t>
+                                </tbody>
+                            </table>
+
+                        </div>
+
+                    </t>
+                </t>
+            </t>
+        </template>
+
+        <template id="report_count_width_height_document" inherit_id="sale.report_saleorder_document">
+<!--            <xpath expr="//div[@id='informations']" position="after">-->
+<!--                <div class="row mt32 mb32" id="total_info">-->
+<!--                    <div t-if="doc.total_counts" class="col-auto col-3 mw-100 mb-2">-->
+<!--                        <strong>Total Count:</strong>-->
+<!--                        <p class="m-0" t-field="doc.total_counts"/>-->
+<!--                    </div>-->
+<!--                    <div t-if="doc.total_quantity" class="col-auto col-3 mw-100 mb-2">-->
+<!--                        <strong>Total Quantity:</strong>-->
+<!--                        <p class="m-0" t-field="doc.total_quantity"/>-->
+<!--                    </div>-->
+
+<!--                </div>-->
+<!--            </xpath>-->
+            <xpath expr="//div[@id='total']" position="before">
+                <div t-attf-class="#{'col-6' if report_type != 'html' else 'col-sm-7 col-md-6'} ml-auto">
+<!--                    <table class="table table-sm" style="page-break-inside: avoid;">-->
+                        <table class="table table-sm">
+                        <tr class="border-black o_total">
+                            <td>
+                                <strong>Total Count</strong>
+                            </td>
+                            <td class="text-left">
+                                <span t-esc="doc.total_counts"/>
+                            </td>
+                        </tr>
+                        <tr class="border-black o_total">
+                            <td>
+                                <strong>Total Quantity</strong>
+                            </td>
+                            <td class="text-left">
+                                <span t-esc="doc.total_quantity"/>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </xpath>
+            <!-- TODO not the best thing to inherit... -->
+            <xpath expr="//th[@name='th_description']" position="after">
+                <th name="th_color" class="text-left">Color</th>
+                <th name="th_count" class="text-left">Count</th>
+                <th name="th_width" class="text-right">Width</th>
+                <th name="th_height" class="text-right">Height</th>
+            </xpath>
+            <xpath expr="//td[@name='td_name']" position="after">
+                <td name="td_name">
+                    <span t-field="line.color_id.display_name"/>
+                </td>
+                <td name="td_name">
+                    <span t-field="line.count"/>
+                </td>
+                <td name="td_name">
+                    <span t-field="line.width"/>
+                </td>
+                <td name="td_name">
+                    <span t-field="line.height"/>
+                </td>
+            </xpath>
+        </template>
+
+        <template id="document_counts_totals">
+
+            <!--Total amount with all taxes-->
+            <tr class="border-black o_total">
+                <td>
+                    <strong>Total Count</strong>
+                </td>
+                <td class="text-left">
+                    <span t-esc="doc.total_counts"/>
+                </td>
+            </tr>
+        </template>
+    </data>
+</odoo>

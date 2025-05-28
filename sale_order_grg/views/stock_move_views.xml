@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="stock_move_without_package_width_height_inherit" model="ir.ui.view">
+        <field name="name">view.stock.move.without_package.inherit</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='move_ids_without_package']/list/field[@name='product_uom_qty']"
+                   position="before">
+                <field name="width" readonly="1"/>
+                <field name="height" readonly="1"/>
+                <field name="count" readonly="1"/>
+            </xpath>
+            <!--            <xpath expr="//field[@name='move_ids_without_package']//form//field[@name='product_uom_qty']" position="before">-->
+            <!--                <field name="width" readonly="1"/>-->
+            <!--                <field name="height" readonly="1"/>-->
+            <!--                <field name="count" readonly="1"/>-->
+            <!--            </xpath>-->
+        </field>
+    </record>
+
+<!--    <record id="stock.view_stock_move_nosuggest_operations" model="ir.ui.view">-->
+<!--        <field name="name">stock.move.operations.nosuggest.form</field>-->
+<!--        <field name="model">stock.move</field>-->
+<!--        <field name="inherit_id" ref="stock.view_stock_move_operations"/>-->
+<!--        <field name="arch" type="xml">-->
+<!--            <xpath expr="//field[@name='product_id']" position="after">-->
+<!--                <field name="width"/>-->
+<!--                <field name="height"/>-->
+<!--                <field name="count"/>-->
+<!--            </xpath>-->
+<!--        </field>-->
+
+<!--    </record>-->
+
+    <record model="ir.ui.view" id="stock_move_line_detailed_width_height_inherit">
+        <field name="name">view.stock.move.line.detailed.inherit</field>
+        <field name="model">stock.move.line</field>
+        <field name="inherit_id" ref="stock.view_stock_move_line_detailed_operation_tree"/>
+        <field name="arch" type="xml">
+           <xpath expr="//field[@name='product_id']" position="after">
+                <field name="width" readonly="0"/>
+                <field name="height" readonly="0"/>
+                <field name="count" readonly="0"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="stock_move_line_operation_width_height_inherit">
+        <field name="name">view.stock.move.line.operation.inherit</field>
+        <field name="model">stock.move.line</field>
+        <field name="inherit_id" ref="stock.view_stock_move_line_operation_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='lot_id']" position="after">
+                <field name="width" readonly="0"/>
+                <field name="height" readonly="0"/>
+                <field name="count" readonly="0"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="view_stock_quant_width_height_inherit">
+        <field name="name">view.stock.quant.inherit</field>
+        <field name="model">stock.quant</field>
+        <field name="inherit_id" ref="stock.view_stock_quant_tree_editable"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='lot_id']" position="after">
+                <field name="width" readonly="0"/>
+                <field name="height" readonly="0"/>
+                <field name="count" readonly="0"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="stock_move_tree_width_height_inherit">
+        <field name="name">view.stock.move.tree</field>
+        <field name="model">stock.move</field>
+        <field name="inherit_id" ref="stock.view_move_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_uom_qty']" position="before">
+                <field name="width" readonly="0"/>
+                <field name="height" readonly="0"/>
+                <field name="count" readonly="0"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

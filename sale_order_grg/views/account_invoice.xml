@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record model="ir.ui.view" id="account_move_width_height_inherit">
+        <field name="name">view.invoice.inherit.invoice</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="partner_category_id"/>
+            </xpath>
+            <xpath expr="//group[@id='header_right_group']" position="inside">
+                <field name="vat_invoice_number"/>
+                <field name="reviewer_employee_id"/>
+                <field name="collector_employee_id"/>
+            </xpath>
+            <xpath expr="//field[@name='invoice_line_ids']" position="before">
+                <group>
+                    <group>
+
+                        <field name="total_counts"/>
+                        <field name="total_price_materials"/>
+                        <field name="materials" widget="many2many_tags"/>
+                    </group>
+                    <group>
+
+                        <field name="total_quantity"/>
+                        <field name="total_taxed_price_materials"/>
+                    </group>
+                </group>
+            </xpath>
+            <xpath expr="//page/field[@name='invoice_line_ids']/list/field[@name='name']" position="after">
+                <field name="color_id"/>
+                <field name="count"/>
+                <field name="height"/>
+                <field name="width"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!--    <record id="view_account_payment_form" model="ir.ui.view">-->
+    <!--        <field name="name">account.payment.form</field>-->
+    <!--        <field name="model">account.payment</field>-->
+    <!--        <field name="inherit_id" ref="account.view_account_payment_form"/>-->
+    <!--        <field name="arch" type="xml">-->
+    <!--            <xpath expr="//field[@name='journal_id']" position="before">-->
+    <!--                <field name="reference"/>-->
+    <!--            </xpath>-->
+    <!--        </field>-->
+    <!--    </record>-->
+
+    <record model="ir.ui.view" id="account_move_width_height_tree_inherit">
+        <field name="name">view.invoice.tree.invoice</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='amount_residual_signed']" position="before">
+                <field name="materials" widget="many2many_tags" optional="show"/>
+                <field name="materials_name" widget="many2many_tags" optional="hide"/>
+                <field name="partner_category_id"/>
+                <field name="total_counts" sum="Total count"/>
+                <field name="total_quantity" sum="Total Quantity"/>
+                <field name="total_price_materials" sum="Material Price"/>
+                <field name="total_taxed_price_materials" sum="Material Taxed Price"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

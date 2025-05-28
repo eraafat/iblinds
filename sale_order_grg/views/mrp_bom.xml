@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record model="ir.ui.view" id="mrp_bom_type_percentage_inherit">
+        <field name="name">view.mrp.production.inherit</field>
+        <field name="model">mrp.bom</field>
+        <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='code']" position="before">
+                <field name="is_standard" widget="boolean_toggle"/>
+            </xpath>
+            <xpath expr="//div[@class='o_row']" position="after">
+                <field name="partner_id" invisible="is_standard == True" readonly="1"/>
+                <field name="sale_order_number" invisible="is_standard == True" readonly="1"/>
+                <field name="sale_order_line_id" invisible="is_standard == True" readonly="1"/>
+            </xpath>
+            <xpath expr="//field[@name='bom_line_ids']//list//field[@name='product_qty']" position="after">
+                <field name="qty_type" required="1" readonly="0"/>
+                <field name="extra_percentage" required="1" readonly="0"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="mrp_bom_type_percentage_tree_inherit">
+        <field name="name">view.mrp.production.inherit</field>
+        <field name="model">mrp.bom</field>
+        <field name="inherit_id" ref="mrp.mrp_bom_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_qty']" position="after">
+                <field name="partner_id" invisible="is_standard == True" readonly="1"/>
+                <field name="sale_order_number" invisible="is_standard == True" readonly="1"/>
+                <field name="sale_order_line_id" invisible="is_standard == True" readonly="1"/>
+                <field name="is_standard" widget="boolean_toggle" optional="hide" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

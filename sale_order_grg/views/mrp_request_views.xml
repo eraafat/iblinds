@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2017 ForgeFlow
+     License LGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+
+    <data noupdate="1">
+
+        <!-- Sequences for sale.order -->
+        <record id="seq_mrp_request" model="ir.sequence">
+            <field name="name">Manufacturing request</field>
+            <field name="code">mrp.request</field>
+            <field name="prefix">MR/%(year)s/</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+    </data>
+
+    <record model="ir.ui.view" id="mrp_production_width_height_inherit">
+        <field name="name">view.mrp.production.inherit</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='bom_div']" position="after">
+                <label for="height" string="Dimensions" name="bom_label"/>
+                <div class="o_row" name="dimensions_div">
+                    <field name="height" readonly="1"/>
+                    <field name="width" readonly="1"/>
+                </div>
+
+            </xpath>
+            <xpath expr="//field[@name='user_id']" position="after">
+                <field name="partner_id" readonly="1"/>
+                <field name="sales_order_number" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_mrp_request_tree" model="ir.ui.view">
+        <field name="name">mrp.request.tree</field>
+        <field name="model">mrp.request</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="state == 'done'" decoration-bf="state == 'in_progress'">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="delivery_date"/>
+                <field name="sales_order_number"/>
+                <field name="total_count" sum="Total Count"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="mrp_request_search">
+        <field name="name">mrp.request.search</field>
+        <field name="model">mrp.request</field>
+        <field name="arch" type="xml">
+            <search string="Manufacturing Requests Search">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="delivery_date"/>
+                <field name="sales_order_number"/>
+                <field name="state"/>
+                <separator/>
+                <filter string="Draft" name="draft" domain="[('state','=','draft')]"/>
+                <filter string="In Progress"
+                        name="open"
+                        domain="[('state','=','in_progress')]"
+                />
+                <filter string="Finished" name="done" domain="[('state','=','done')]"/>
+
+                <group expand="0" string="Group By">
+                    <filter name="state"
+                            string="State"
+                            domain="[]"
+                            context="{'group_by':'state'}"
+                    />
+
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_mrp_request_form" model="ir.ui.view">
+        <field name="name">mrp.request.form</field>
+        <field name="model">mrp.request</field>
+        <field name="arch" type="xml">
+            <form string="Manufacturing Requests">
+                <header>
+                    <button name="create_mrp_operation" string="Manufacturing Operation"
+                            type="object" class="btn btn-danger" invisible="state != 'draft'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <!--                        <field name="picking_ids" invisible="1"/>-->
+                        <button
+                                type="object"
+                                name="action_view_manufacturing_operation"
+                                class="oe_stat_button"
+                                icon="fa-truck"
+                                groups="mrp.group_mrp_user">
+                            <field name="mrp_count"
+                                   widget="statinfo"
+                                   string="Count"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name" string="Manufacturing Request"/>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="sales_order_number"/>
+                        </group>
+                        <group>
+                            <field name="delivery_date"/>
+                            <field name="total_count"/>
+                        </group>
+
+                    </group>
+                    <notebook>
+                        <!--Empty notebook to inherit pages from other related modules-->
+                        <page string="To Productions">
+                            <field name="order_line">
+                                <list>
+                                    <field name="product_id" readonly="1"/>
+                                    <field name="color_id" readonly="1"/>
+                                    <field name="count" readonly="1"/>
+                                    <field name="height" readonly="1"/>
+                                    <field name="width" readonly="1"/>
+                                    <field name="bom_count" invisible="1"/>
+                                    <field name="send_to_mrp" invisible="1"
+                                           readonly="mrp_state == 'MRP' or bom_count == 0"/>
+                                    />
+                                    <field name="mrp_state" invisible="1" readonly="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <!--                        <page string="Production operations">-->
+                        <!--                            <group>-->
+                        <!--                                <button name="confirm_all_orders"-->
+                        <!--                                        invisible="draft_count == 0 or state != 'in_progress'"-->
+                        <!--                                        string="Confirm All" type="object" class="btn btn-warning"/>-->
+                        <!--                                <button name="button_mark_done"-->
+                        <!--                                        invisible="draft_count == 0 or state != 'in_progress'"-->
+                        <!--                                        string="Mark As Done" type="object" class="btn btn-info"/>-->
+                        <!--                            </group>-->
+                        <!--                            &lt;!&ndash;                            <group>&ndash;&gt;-->
+                        <!--                            <field name="draft_count" invisible="1"/>-->
+                        <!--                            <field name="confirmed_count" invisible="1"/>-->
+                        <!--                            &lt;!&ndash;                            </group>&ndash;&gt;-->
+                        <!--                            <field name="mrp_production_ids" context="{'form_view_ref': 'mrp.mrp_production_form_view'}">-->
+                        <!--                                <list string="Manufacturing Orders" js_class="lazy_column_list"-->
+                        <!--                                      default_order="priority desc, date_planned_start desc" multi_edit="1" sample="1"-->
+                        <!--                                      decoration-info="state == 'draft'">-->
+                        <!--                                    <header>-->
+                        <!--                                        <button name="button_plan" type="object" string="Plan"/>-->
+                        <!--                                        <button name="do_unreserve" type="object" string="Unreserve"/>-->
+                        <!--                                    </header>-->
+                        <!--                                    &lt;!&ndash;                                    <button name="button_plan" type="object" string="Plan"/>&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                    <field name="confirm_cancel" invisible="1"/>&ndash;&gt;-->
+                        <!--                                    <field name="show_lock" invisible="1"/>-->
+                        <!--                                    <field name="qty_producing" invisible="1"/>-->
+                        <!--                                    <button name="button_mark_done"-->
+                        <!--                                            invisible="qty_producing == 0 or state in ('draft', 'cancel', 'done', 'to_close')"-->
+                        <!--                                            string="Validate" type="object" class="oe_highlight"-->
+                        <!--                                            confirm="There are no components to consume. Are you still sure you want to continue?"-->
+                        <!--                                            data-hotkey="g"/>-->
+                        <!--                                    &lt;!&ndash;attrs="{'invisible': ['&amp;','|',('state', 'not in', ('confirmed', 'progress')),('qty_producing', '!=', 0),('state', '!=', 'to_close')]}"&ndash;&gt;-->
+
+                        <!--                                    <button name="button_mark_done"-->
+                        <!--                                            invisible="draft_count == 0 or state not in ('confirmed', 'progress')"-->
+                        <!--                                            string="Mark as Done" type="object" class="oe_highlight" data-hotkey="g"/>-->
+                        <!--                                    &lt;!&ndash;                                    <button name="button_mark_done"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            attrs="{'invisible': '|',('move_raw_ids', '!=', []),'&amp;','|',('state', 'not in', ('confirmed', 'progress')),('qty_producing', '!=', 0),('state', '!=', 'to_close')]}"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            string="Mark as Done" type="object" class="oe_highlight" data-hotkey="g"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            confirm="There are no components to consume. Are you still sure you want to continue?"/>&ndash;&gt;-->
+                        <!--                                    <button name="action_confirm" invisible="state != 'draft'" string="Confirm"-->
+                        <!--                                            type="object" class="oe_highlight" data-hotkey="v"/>-->
+                        <!--                                    <field name="is_planned" invisible="1"/>-->
+                        <!--                                    <button name="button_plan"-->
+                        <!--                                            invisible="state not in ('confirmed', 'progress', 'to_close') or is_planned == True"-->
+                        <!--                                            type="object" string="Plan" class="oe_highlight" data-hotkey="x"/>-->
+                        <!--                                    &lt;!&ndash;                                                                                attrs="{'invisible': ['|',('state', 'not in', ('confirmed', 'progress', 'to_close')), ('is_planned', '=', True)]}"&ndash;&gt;-->
+
+
+                        <!--                                    &lt;!&ndash;                                    <button name="button_unplan" type="object" string="Unplan"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            attrs="{'invisible': ['|', ('is_planned', '=', False), ('state', '=', 'cancel')]}"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            data-hotkey="x"/>&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                    <button name="action_assign"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            attrs="{'invisible': ['|', ('state', 'in', ('draft', 'done', 'cancel')), ('reserve_visible', '=', False)]}"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            string="Check availability" type="object" data-hotkey="q"/>&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                    <button name="do_unreserve" type="object" string="Unreserve"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            attrs="{'invisible': [('unreserve_visible', '=', False)]}" data-hotkey="w"/>&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                    <button name="button_scrap" type="object" string="Scrap"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            attrs="{'invisible': [('state', 'in', ('cancel', 'draft'))]}"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            data-hotkey="y"/>&ndash;&gt;-->
+
+                        <!--                                    &lt;!&ndash;                                    <button name="action_toggle_is_locked"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            attrs="{'invisible': ['|', ('show_lock', '=', False), ('is_locked', '=', False)]}"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            string="Unlock" groups="mrp.group_mrp_manager" type="object"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            help="Unlock the manufacturing order to adjust what has been consumed or produced."&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            data-hotkey="l"/>&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                    <button name="action_toggle_is_locked"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            attrs="{'invisible': ['|', ('show_lock', '=', False), ('is_locked', '=', True)]}"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            string="Lock" groups="mrp.group_mrp_manager" type="object"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            help="Lock the manufacturing order to prevent changes to what has been consumed or produced."&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            data-hotkey="l"/>&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                    <field name="show_serial_mass_produce" invisible="1"/>&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                    <button name="action_serial_mass_produce_wizard"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            attrs="{'invisible': [('show_serial_mass_produce', '=', False)]}"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            string="Mass Produce" type="object"/>&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                    <button name="action_cancel" type="object" string="Cancel" data-hotkey="z"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            attrs="{'invisible': ['|', '|', ('id', '=', False), ('state', 'in', ('done', 'cancel')), ('confirm_cancel', '=', True)]}"/>&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                    <button name="action_cancel" type="object" string="Cancel" data-hotkey="z"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            attrs="{'invisible': ['|', '|', ('id', '=', False), ('state', 'in', ('done', 'cancel')), ('confirm_cancel', '=', False)]}"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            confirm="Some product moves have already been confirmed, this manufacturing order can't be completely cancelled. Are you still sure you want to process ?"/>&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                    <button name="button_unbuild" type="object" string="Unbuild"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                            attrs="{'invisible': [('state', '!=', 'done')]}" data-hotkey="shift+v"/>&ndash;&gt;-->
+                        <!--                                    <field name="priority" optional="show" widget="priority" nolabel="1"/>-->
+                        <!--                                    <field name="message_needaction" invisible="1"/>-->
+                        <!--                                    <field name="name" decoration-bf="1"/>-->
+                        <!--                                    &lt;!&ndash;                                    <field name="date_planned_start" readonly="1" optional="show"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                           widget="remaining_days"/>&ndash;&gt;-->
+                        <!--                                    <field name="date_deadline" widget="remaining_days"-->
+                        <!--                                           invisible="state in ['done', 'cancel']"-->
+                        <!--                                           optional="hide"/>-->
+                        <!--                                    &lt;!&ndash;                                    attrs="{'invisible': [('state', 'in', ['done', 'cancel'])]}"&ndash;&gt;-->
+
+                        <!--                                    <field name="product_id" readonly="1" optional="show"/>-->
+                        <!--                                    <field name="lot_producing_id" optional="hide"/>-->
+                        <!--                                    <field name="bom_id" readonly="1" optional="hide"/>-->
+                        <!--                                    <field name="activity_ids" string="Next Activity" widget="list_activity"-->
+                        <!--                                           optional="show"/>-->
+                        <!--                                    <field name="origin" optional="show"/>-->
+                        <!--                                    <field name="user_id" optional="hide" widget="many2one_avatar_user"/>-->
+                        <!--                                    <field name="components_availability_state" invisible="1"-->
+                        <!--                                           options="{&quot;lazy&quot;: true}"/>-->
+                        <!--                                    <field name="components_availability" options="{&quot;lazy&quot;: true}"-->
+                        <!--                                           invisible="state not in ['confirmed', 'progress']"-->
+                        <!--                                           optional="show"-->
+                        <!--                                           decoration-success="reservation_state == 'assigned' or components_availability_state == 'available'"-->
+                        <!--                                           decoration-warning="reservation_state != 'assigned' and components_availability_state in ('expected', 'available')"-->
+                        <!--                                           decoration-danger="reservation_state != 'assigned' and components_availability_state == 'late'"/>-->
+                        <!--                                    <field name="reservation_state" optional="hide"-->
+                        <!--                                           decoration-danger="reservation_state == 'confirmed'"-->
+                        <!--                                           decoration-success="reservation_state == 'assigned'"/>-->
+                        <!--                                    <field name="product_qty" sum="Total Qty" string="Quantity" readonly="1"-->
+                        <!--                                           optional="show"/>-->
+                        <!--                                    <field name="product_uom_id" string="UoM"-->
+                        <!--                                           options="{'no_open':True,'no_create':True}" groups="uom.group_uom"-->
+                        <!--                                           optional="show"/>-->
+                        <!--                                    &lt;!&ndash;                                    <field name="production_duration_expected"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                           invisible="production_real_duration == 0"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                           groups="mrp.group_mrp_routings" widget="float_time"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                           sum="Total expected duration" optional="show"/>&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                    <field name="production_real_duration"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                           invisible="production_real_duration == 0"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                           groups="mrp.group_mrp_routings" widget="float_time" sum="Total real duration"&ndash;&gt;-->
+                        <!--                                    &lt;!&ndash;                                           optional="show"/>&ndash;&gt;-->
+                        <!--                                    <field name="company_id" readonly="1" groups="base.group_multi_company"-->
+                        <!--                                           optional="show"/>-->
+                        <!--                                    <field name="state" decoration-success="state in ('done', 'to_close')"-->
+                        <!--                                           decoration-warning="state == 'progress'"-->
+                        <!--                                           decoration-info="state in ('confirmed', 'draft')" optional="show"-->
+                        <!--                                           widget="badge"/>-->
+                        <!--                                    <field name="activity_exception_decoration" widget="activity_exception"/>-->
+                        <!--                                    <field name="delay_alert_date" invisible="1"/>-->
+                        <!--                                    <field nolabel="1" name="json_popover" widget="stock_rescheduling_popover"-->
+                        <!--                                           invisible="json_popover == Fale"/>-->
+                        <!--                                </list>-->
+
+                        <!--                            </field>-->
+                        <!--                        </page>-->
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_mrp_request_form" model="ir.actions.act_window">
+        <field name="name">Manufacturing Requests</field>
+        <field name="res_model">mrp.request</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">list,form,pivot</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to add a Manufacturing Request.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+            id="menu_stock_request_root"
+            name="Manufacturing Requests"
+            parent="mrp.menu_mrp_root"
+            sequence="1"
+    />
+
+    <menuitem
+            id="menu_stock_request_actions"
+            name="Requests"
+            parent="menu_stock_request_root"
+            action="action_mrp_request_form"
+            sequence="1"
+    />
+
+</odoo>

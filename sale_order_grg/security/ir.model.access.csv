@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mrp_request_manager,access.mrp_request,model_mrp_request,,1,1,1,1
+access_mrp_request_line_manager,access.mrp_request,model_mrp_request_line,,1,1,1,1
+access_stock_width_height_manager,access.stock_width_height,model_stock_width_height,,1,1,1,1
+access_stock_width_height_line_manager,access.stock_width_height_line,model_stock_width_height_line,,1,1,1,1
+access_customer_source_manager,access.customer.source,model_customer_source,,1,1,1,1
