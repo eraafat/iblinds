@@ -26,53 +26,53 @@ class StockQuant(models.Model):
         return ['product_id', 'location_id', 'lot_id', 'package_id', 'owner_id', 'count', 'width',
                 'height'] + self._get_inventory_fields_write()
 
+    #
+    # @api.model
+    # def _merge_quants(self):
+    #     """ In a situation where one transaction is updating a quant via
+    #     `_update_available_quantity` and another concurrent one calls this function with the same
+    #     argument, we’ll create a new quant in order for these transactions to not rollback. This
+    #     method will find and deduplicate these quants.
+    #     """
+    #     print('_merge_quants-------------------')
+    #     query = """WITH
+    #                     dupes AS (
+    #                         SELECT min(id) as to_update_quant_id,
+    #                             (array_agg(id ORDER BY id))[2:array_length(array_agg(id), 1)] as to_delete_quant_ids,
+    #                             SUM(reserved_quantity) as reserved_quantity,
+    #                             SUM(inventory_quantity) as inventory_quantity,
+    #                             SUM(quantity) as quantity,
+    #                             MIN(in_date) as in_date
+    #                         FROM stock_quant
+    #                         GROUP BY product_id, company_id, location_id, lot_id, width,height,package_id, owner_id
+    #                         HAVING count(id) > 1
+    #                     ),
+    #                     _up AS (
+    #                         UPDATE stock_quant q
+    #                             SET quantity = d.quantity,
+    #                                 reserved_quantity = d.reserved_quantity,
+    #                                 inventory_quantity = d.inventory_quantity,
+    #                                 in_date = d.in_date
+    #                         FROM dupes d
+    #                         WHERE d.to_update_quant_id = q.id
+    #                     )
+    #                DELETE FROM stock_quant WHERE id in (SELECT unnest(to_delete_quant_ids) from dupes)
+    #     """
+    #     try:
+    #         with self.env.cr.savepoint():
+    #             self.env.cr.execute(query)
+    #             # self.invalidate_cache()
+    #     except Error as e:
+    #         _logger.info('an error occurred while merging quants: %s', e.pgerror)
 
-    @api.model
-    def _merge_quants(self):
-        """ In a situation where one transaction is updating a quant via
-        `_update_available_quantity` and another concurrent one calls this function with the same
-        argument, we’ll create a new quant in order for these transactions to not rollback. This
-        method will find and deduplicate these quants.
-        """
-        print('_merge_quants-------------------')
-        query = """WITH
-                        dupes AS (
-                            SELECT min(id) as to_update_quant_id,
-                                (array_agg(id ORDER BY id))[2:array_length(array_agg(id), 1)] as to_delete_quant_ids,
-                                SUM(reserved_quantity) as reserved_quantity,
-                                SUM(inventory_quantity) as inventory_quantity,
-                                SUM(quantity) as quantity,
-                                MIN(in_date) as in_date
-                            FROM stock_quant
-                            GROUP BY product_id, company_id, location_id, lot_id, width,height,package_id, owner_id
-                            HAVING count(id) > 1
-                        ),
-                        _up AS (
-                            UPDATE stock_quant q
-                                SET quantity = d.quantity,
-                                    reserved_quantity = d.reserved_quantity,
-                                    inventory_quantity = d.inventory_quantity,
-                                    in_date = d.in_date
-                            FROM dupes d
-                            WHERE d.to_update_quant_id = q.id
-                        )
-                   DELETE FROM stock_quant WHERE id in (SELECT unnest(to_delete_quant_ids) from dupes)
-        """
-        try:
-            with self.env.cr.savepoint():
-                self.env.cr.execute(query)
-                # self.invalidate_cache()
-        except Error as e:
-            _logger.info('an error occurred while merging quants: %s', e.pgerror)
-
-    @api.constrains('quantity')
-    def check_quantity(self):
-        for quant in self:
-            if quant.location_id.usage != 'inventory' and quant.lot_id and quant.product_id.tracking == 'serial' \
-                    and float_compare(abs(quant.quantity), 1, precision_rounding=quant.product_uom_id.rounding) > 0:
-                raise ValidationError(
-                    _('The serial number has already been assigned: \n Product: %s, Serial Number: %s') % (
-                    quant.product_id.display_name, quant.lot_id.name))
+    # @api.constrains('quantity')
+    # def check_quantity(self):
+    #     for quant in self:
+    #         if quant.location_id.usage != 'inventory' and quant.lot_id and quant.product_id.tracking == 'serial' \
+    #                 and float_compare(abs(quant.quantity), 1, precision_rounding=quant.product_uom_id.rounding) > 0:
+    #             raise ValidationError(
+    #                 _('The serial number has already been assigned: \n Product: %s, Serial Number: %s') % (
+    #                 quant.product_id.display_name, quant.lot_id.name))
 
     @api.depends('width', 'height', 'inventory_quantity_auto_apply')
     def compute_count_of_product(self):
@@ -97,115 +97,115 @@ class StockQuant(models.Model):
             else:
                 rec.count = 0
 
-    @api.model
-    def _get_inventory_fields_write(self):
-        """ Returns a list of fields user can edit when he want to edit a quant in `inventory_mode`.
-        """
-        fields = ['inventory_quantity', 'inventory_quantity_auto_apply', 'inventory_diff_quantity', 'count', 'width','accounting_date',
-                  'height', 'inventory_date', 'user_id', 'inventory_quantity_set', 'is_outdated']
-        print('fields',fields)
-        return fields
+    # @api.model
+    # def _get_inventory_fields_write(self):
+    #     """ Returns a list of fields user can edit when he want to edit a quant in `inventory_mode`.
+    #     """
+    #     fields = ['inventory_quantity', 'inventory_quantity_auto_apply', 'inventory_diff_quantity', 'count', 'width','accounting_date',
+    #               'height', 'inventory_date', 'user_id', 'inventory_quantity_set', 'is_outdated']
+    #     print('fields',fields)
+    #     return fields
 
-    def _gather(self, product_id, location_id, lot_id=None, package_id=None, owner_id=None, strict=False, width=0,
-                height=0):
-        removal_strategy = self._get_removal_strategy(product_id, location_id)
-        removal_strategy_order = self._get_removal_strategy_order(removal_strategy)
-
-        domain = [('product_id', '=', product_id.id)]
-        if not strict:
-            if lot_id:
-                domain = expression.AND([['|', ('lot_id', '=', lot_id.id), ('lot_id', '=', False)], domain])
-            if package_id:
-                domain = expression.AND([[('package_id', '=', package_id.id)], domain])
-            if owner_id:
-                domain = expression.AND([[('owner_id', '=', owner_id.id)], domain])
-            if width:
-                domain = expression.AND([[('width', '=', width)], domain])
-            if height:
-                domain = expression.AND([[('height', '=', height)], domain])
-            domain = expression.AND([[('location_id', 'child_of', location_id.id)], domain])
-        else:
-            domain = expression.AND(
-                [['|', ('lot_id', '=', lot_id.id), ('lot_id', '=', False)] if lot_id else [('lot_id', '=', False)],
-                 domain])
-            domain = expression.AND([[('package_id', '=', package_id and package_id.id or False)], domain])
-            domain = expression.AND([[('owner_id', '=', owner_id and owner_id.id or False)], domain])
-            domain = expression.AND([[('location_id', '=', location_id.id)], domain])
-
-        return self.search(domain, order=removal_strategy_order).sorted(lambda q: not q.lot_id)
-
-    @api.model
-    def _update_available_quantity(self, product_id, location_id, quantity, lot_id=None, package_id=None, owner_id=None,
-                                   in_date=None, width=0, height=0):
-        """ Increase or decrease `reserved_quantity` of a set of quants for a given set of
-        product_id/location_id/lot_id/package_id/owner_id.
-
-        :param product_id:
-        :param location_id:
-        :param quantity:
-        :param lot_id:
-        :param package_id:
-        :param owner_id:
-        :param datetime in_date: Should only be passed when calls to this method are done in
-                                 order to move a quant. When creating a tracked quant, the
-                                 current datetime will be used.
-        :return: tuple (available_quantity, in_date as a datetime)
-        """
-        self = self.sudo()
-        quants = self._gather(product_id, location_id, lot_id=lot_id, package_id=package_id, owner_id=owner_id,
-                              strict=True, width=width, height=height)
-        if lot_id and quantity > 0:
-            quants = quants.filtered(lambda q: q.lot_id)
-        if width and height:
-            quants = quants.filtered(lambda q: q.width == width and q.height == height)
-
-        if location_id.should_bypass_reservation():
-            incoming_dates = []
-        else:
-            incoming_dates = [quant.in_date for quant in quants if quant.in_date and
-                              float_compare(quant.quantity, 0, precision_rounding=quant.product_uom_id.rounding) > 0]
-        if in_date:
-            incoming_dates += [in_date]
-        # If multiple incoming dates are available for a given lot_id/package_id/owner_id, we
-        # consider only the oldest one as being relevant.
-        if incoming_dates:
-            in_date = min(incoming_dates)
-        else:
-            in_date = fields.Datetime.now()
-
-        quant = None
-        if quants:
-            # see _acquire_one_job for explanations
-            self._cr.execute(
-                "SELECT id FROM stock_quant WHERE id IN %s ORDER BY lot_id LIMIT 1 FOR NO KEY UPDATE SKIP LOCKED",
-                [tuple(quants.ids)])
-            stock_quant_result = self._cr.fetchone()
-            if stock_quant_result:
-                quant = self.browse(stock_quant_result[0])
-
-        if quant:
-            quant.write({
-                'quantity': quant.quantity + quantity,
-                'in_date': in_date,
-            })
-        else:
-            valuess = {
-                'product_id': product_id.id,
-                'location_id': location_id.id,
-                'quantity': quantity,
-                'lot_id': lot_id and lot_id.id,
-                'height': height,
-                'width': width,
-                'package_id': package_id and package_id.id,
-                'owner_id': owner_id and owner_id.id,
-                'in_date': in_date,
-            }
-            print("valuess")
-            print(valuess)
-            self.create(valuess)
-        return self._get_available_quantity(product_id, location_id, lot_id=lot_id, package_id=package_id,
-                                            owner_id=owner_id, strict=False, allow_negative=True), in_date
-
+    # def _gather(self, product_id, location_id, lot_id=None, package_id=None, owner_id=None, strict=False, width=0,
+    #             height=0):
+    #     removal_strategy = self._get_removal_strategy(product_id, location_id)
+    #     removal_strategy_order = self._get_removal_strategy_order(removal_strategy)
+    #
+    #     domain = [('product_id', '=', product_id.id)]
+    #     if not strict:
+    #         if lot_id:
+    #             domain = expression.AND([['|', ('lot_id', '=', lot_id.id), ('lot_id', '=', False)], domain])
+    #         if package_id:
+    #             domain = expression.AND([[('package_id', '=', package_id.id)], domain])
+    #         if owner_id:
+    #             domain = expression.AND([[('owner_id', '=', owner_id.id)], domain])
+    #         if width:
+    #             domain = expression.AND([[('width', '=', width)], domain])
+    #         if height:
+    #             domain = expression.AND([[('height', '=', height)], domain])
+    #         domain = expression.AND([[('location_id', 'child_of', location_id.id)], domain])
+    #     else:
+    #         domain = expression.AND(
+    #             [['|', ('lot_id', '=', lot_id.id), ('lot_id', '=', False)] if lot_id else [('lot_id', '=', False)],
+    #              domain])
+    #         domain = expression.AND([[('package_id', '=', package_id and package_id.id or False)], domain])
+    #         domain = expression.AND([[('owner_id', '=', owner_id and owner_id.id or False)], domain])
+    #         domain = expression.AND([[('location_id', '=', location_id.id)], domain])
+    #
+    #     return self.search(domain, order=removal_strategy_order).sorted(lambda q: not q.lot_id)
+    #
+    # @api.model
+    # def _update_available_quantity(self, product_id, location_id, quantity, lot_id=None, package_id=None, owner_id=None,
+    #                                in_date=None, width=0, height=0):
+    #     """ Increase or decrease `reserved_quantity` of a set of quants for a given set of
+    #     product_id/location_id/lot_id/package_id/owner_id.
+    #
+    #     :param product_id:
+    #     :param location_id:
+    #     :param quantity:
+    #     :param lot_id:
+    #     :param package_id:
+    #     :param owner_id:
+    #     :param datetime in_date: Should only be passed when calls to this method are done in
+    #                              order to move a quant. When creating a tracked quant, the
+    #                              current datetime will be used.
+    #     :return: tuple (available_quantity, in_date as a datetime)
+    #     """
+    #     self = self.sudo()
+    #     quants = self._gather(product_id, location_id, lot_id=lot_id, package_id=package_id, owner_id=owner_id,
+    #                           strict=True, width=width, height=height)
+    #     if lot_id and quantity > 0:
+    #         quants = quants.filtered(lambda q: q.lot_id)
+    #     if width and height:
+    #         quants = quants.filtered(lambda q: q.width == width and q.height == height)
+    #
+    #     if location_id.should_bypass_reservation():
+    #         incoming_dates = []
+    #     else:
+    #         incoming_dates = [quant.in_date for quant in quants if quant.in_date and
+    #                           float_compare(quant.quantity, 0, precision_rounding=quant.product_uom_id.rounding) > 0]
+    #     if in_date:
+    #         incoming_dates += [in_date]
+    #     # If multiple incoming dates are available for a given lot_id/package_id/owner_id, we
+    #     # consider only the oldest one as being relevant.
+    #     if incoming_dates:
+    #         in_date = min(incoming_dates)
+    #     else:
+    #         in_date = fields.Datetime.now()
+    #
+    #     quant = None
+    #     if quants:
+    #         # see _acquire_one_job for explanations
+    #         self._cr.execute(
+    #             "SELECT id FROM stock_quant WHERE id IN %s ORDER BY lot_id LIMIT 1 FOR NO KEY UPDATE SKIP LOCKED",
+    #             [tuple(quants.ids)])
+    #         stock_quant_result = self._cr.fetchone()
+    #         if stock_quant_result:
+    #             quant = self.browse(stock_quant_result[0])
+    #
+    #     if quant:
+    #         quant.write({
+    #             'quantity': quant.quantity + quantity,
+    #             'in_date': in_date,
+    #         })
+    #     else:
+    #         valuess = {
+    #             'product_id': product_id.id,
+    #             'location_id': location_id.id,
+    #             'quantity': quantity,
+    #             'lot_id': lot_id and lot_id.id,
+    #             'height': height,
+    #             'width': width,
+    #             'package_id': package_id and package_id.id,
+    #             'owner_id': owner_id and owner_id.id,
+    #             'in_date': in_date,
+    #         }
+    #         print("valuess")
+    #         print(valuess)
+    #         self.create(valuess)
+    #     return self._get_available_quantity(product_id, location_id, lot_id=lot_id, package_id=package_id,
+    #                                         owner_id=owner_id, strict=False, allow_negative=True), in_date
+    #
 
 class StockMove(models.Model):
     _inherit = 'stock.move'
