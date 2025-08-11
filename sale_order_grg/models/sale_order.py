@@ -3,6 +3,11 @@ from odoo.exceptions import ValidationError
 
 from odoo.tools import float_compare
 
+class ProductPricelist(models.Model):
+    _inherit = 'product.pricelist'
+
+    not_change_price = fields.Boolean()
+
 
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
@@ -54,6 +59,8 @@ class SaleOrder(models.Model):
         for rec in self:
             total_count = 0
             total_qunatity = 0
+            rec.total_counts = 0
+            rec.total_quantity =0
             for line in rec.order_line:
                 if line.count and not line.display_type and line.width and line.height:
                     total_count += line.count
@@ -352,32 +359,65 @@ class SaleOrderLine(models.Model):
             res['account_id'] = False
         return res
 
-    @api.onchange('product_uom', 'product_uom_qty','color_id')
-    def product_uom_change(self):
-        if not self.product_uom or not self.product_id:
-            self.price_unit = 0.0
-            return
-        if self.order_id.pricelist_id and self.order_id.partner_id:
-            product_id = self.color_id if self.color_id else self.product_id
+    @api.depends('product_id', 'color_id','product_uom', 'product_uom_qty')
+    def _compute_pricelist_item_id(self):
+        for line in self:
+            if not line.product_id or line.display_type or not line.order_id.pricelist_id:
+                line.pricelist_item_id = False
+            else:
+                product_id = line.color_id if line.color_id else line.product_id
+                print(product_id)
+                line.pricelist_item_id = line.order_id.pricelist_id._get_product_rule(
+                    product_id,
+                    quantity=line.product_uom_qty or 1.0,
+                    uom=line.product_uom,
+                    date=line._get_order_date(),
+                )
+    def _get_pricelist_price(self):
+        """Compute the price given by the pricelist for the given line information.
 
-            product = product_id.with_context(
-                lang=self.order_id.partner_id.lang,
-                partner=self.order_id.partner_id,
-                quantity=self.product_uom_qty,
-                date=self.order_id.date_order,
-                pricelist=self.order_id.pricelist_id.id,
-                uom=self.product_uom.id,
-                fiscal_position=self.env.context.get('fiscal_position')
-            )
-            self.price_unit = product._get_tax_included_unit_price(
-                self.company_id or self.order_id.company_id,
-                self.order_id.currency_id,
-                self.order_id.date_order,
-                'sale',
-                fiscal_position=self.order_id.fiscal_position_id,
-                product_price_unit=self._get_display_price(product),
-                product_currency=self.order_id.currency_id
-            )
+        :return: the product sales price in the order currency (without taxes)
+        :rtype: float
+        """
+        self.ensure_one()
+        self.product_id.ensure_one()
+        product_id = self.color_id if self.color_id else self.product_id
+        # if self.order_id.pricelist_id.not_change_price:
+        #     return self.price_unit
+        price = self.pricelist_item_id._compute_price(
+            product=product_id.with_context(**self._get_product_price_context()),
+            quantity=self.product_uom_qty or 1.0,
+            uom=self.product_uom,
+            date=self._get_order_date(),
+            currency=self.currency_id,
+        )
+        return price
+
+    # @api.onchange('product_uom', 'product_uom_qty','color_id')
+    # def product_uom_change(self):
+    #     if not self.product_uom or not self.product_id:
+    #         self.price_unit = 0.0
+    #         return
+    #     if self.order_id.pricelist_id and self.order_id.partner_id:
+    #         product_id = self.color_id if self.color_id else self.product_id
+    #         product = product_id.with_context(
+    #             lang=self.order_id.partner_id.lang,
+    #             partner=self.order_id.partner_id,
+    #             quantity=self.product_uom_qty,
+    #             date=self.order_id.date_order,
+    #             pricelist=self.order_id.pricelist_id.id,
+    #             uom=self.product_uom.id,
+    #             fiscal_position=self.env.context.get('fiscal_position')
+    #         )
+    #         self.price_unit = product._get_tax_included_unit_price(
+    #             self.company_id or self.order_id.company_id,
+    #             self.order_id.currency_id,
+    #             self.order_id.date_order,
+    #             'sale',
+    #             fiscal_position=self.order_id.fiscal_position_id,
+    #             product_price_unit=self._get_display_price(product),
+    #             product_currency=self.order_id.currency_id
+    #         )
 
 
 class ProductTemplate(models.Model):

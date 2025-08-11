@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="website_sale_pricelist_form_view" model="ir.ui.view">
+        <field name="name">website_sale.pricelist.form</field>
+        <field name="inherit_id" ref="product.product_pricelist_view"/>
+        <field name="model">product.pricelist</field>
+        <field name="arch" type="xml">
+            <field name="currency_id" position="after">
+                <field name="not_change_price"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="not_change_price_sale_pricelist_tree_view" model="ir.ui.view">
+        <field name="name">product.pricelist.list.inherit.product</field>
+        <field name="model">product.pricelist</field>
+        <field name="inherit_id" ref="product.product_pricelist_view_tree"/>
+        <field name="arch" type="xml">
+            <field name="currency_id" position="after">
+                <field name="not_change_price"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

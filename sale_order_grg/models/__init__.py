@@ -8,4 +8,4 @@ from . import stock_quant_width_height
 # from . import bank_statement_account
 # from . import stock_rule
 from . import partner_constrains
-# from . import price_list
+from . import price_list
