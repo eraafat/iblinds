@@ -37,7 +37,8 @@ class Partner(models.Model):
         for rec in self:
             partners = self.env['res.partner'].search([('parent_id','=',False),('phone','=',rec.phone),('id','!=',rec.id)],limit=1)
             if partners:
-                raise ValidationError('Please Check Customer/Vendor Phone Number , You Have Same for {}'.format(partners.name))
+                pass
+                # raise ValidationError('Please Check Customer/Vendor Phone Number , You Have Same for {}'.format(partners.name))
 
     @api.constrains('category_id')
     def check_if_tags_is_dublicated(self):
