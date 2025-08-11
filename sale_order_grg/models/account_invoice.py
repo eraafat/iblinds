@@ -55,11 +55,13 @@ class AccountMove(models.Model):
             self.action_update_line_receivable()
         return super(AccountMove, self).action_post()
 
-    @api.depends('partner_id')
+    @api.depends('partner_id', 'partner_id.category_id')
     def get_partner_category_from_customer(self):
         for rec in self:
-            if rec.partner_id.category_id:
+            if rec.partner_id and rec.partner_id.category_id:
                 rec.partner_category_id = rec.partner_id.category_id[0]
+            else:
+                rec.partner_category_id = False
 
     total_price_materials = fields.Monetary(
         string="Material Price",
